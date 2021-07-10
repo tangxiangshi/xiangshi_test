@@ -29,8 +29,8 @@
 #include "vision_test/depth_map_estimator.h"
 #include "utility/depth_map_visualization.h"
 #include "utility/ncrl_tf.h"
-#include "xiangshi_msgs/CorrectData.h"
-#include "xiangshi_msgs/Td.h"
+#include "lvio_ros_msg/CorrectData.h"
+#include "lvio_ros_msg/Td.h"
 
 using namespace std;
 using namespace message_filters;

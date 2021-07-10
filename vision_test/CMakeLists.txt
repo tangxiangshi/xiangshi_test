@@ -26,7 +26,7 @@ find_package(Ceres REQUIRED)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-add_message_files(DIRECTORY ../xiangshi_msgs/msg FILES
+add_message_files(DIRECTORY ../lvio_ros_msgs/msg FILES
 CorrectData.msg
 IMUlow.msg
 PointCloud3.msg

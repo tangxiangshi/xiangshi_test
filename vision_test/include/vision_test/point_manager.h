@@ -12,8 +12,8 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <xiangshi_msg/PointCloud3.h>
-#include <xiangshi_msg/CorrectData.h>
+#include <lvio_ros_msgs/PointCloud3.h>
+#include <lvio_ros_msgs/CorrectData.h>
 //#include "ncrl_livins/depth_map_parameters.h"
 //#include "utility/point_utility.h"
 //#include "utility/ncrl_tf.h"

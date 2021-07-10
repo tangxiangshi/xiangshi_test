@@ -12,8 +12,8 @@
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/PointCloud2.h>
-#include <xiangshi_msgs/CorrectData.h>
-#include <xiangshi_msgs/PointCloud3.h>
+#include <lvio_ros_msg/CorrectData.h>
+#include <lvio_ros_msg/PointCloud3.h>
 #include "aloam/common_modify.h"
 
 using namespace std;

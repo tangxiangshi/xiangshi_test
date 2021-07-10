@@ -1,0 +1,6 @@
+Header header
+geometry_msgs/Point position
+geometry_msgs/Quaternion orientation
+geometry_msgs/Vector3 velocity
+geometry_msgs/Vector3 bias_acc
+geometry_msgs/Vector3 bias_gyro

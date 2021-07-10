@@ -11,11 +11,11 @@
 #include<sensor_msgs/PointCloud.h>
 #include<sensor_msgs/PointCloud2.h>
 #include<sensor_msgs/Imu.h>
-#include<xiangshi_msg/CorrectData.h>
-#include<xiangshi_msg/IMUlow.h>
-#include<xiangshi_msg/PointCloud3.h>
-#include<xiangshi_msg/PoseTwist.h>
-#include<xiangshi_msg/Td.h>
+#include<lvio_ros_msgs/CorrectData.h>
+#include<lvio_ros_msgs/IMUlow.h>
+#include<lvio_ros_msgs/PointCloud3.h>
+#include<lvio_ros_msgs/PoseTwist.h>
+#include<lvio_ros_msgs/Td.h>
 #include"../src/aloam/common_modify.h"
 
 
