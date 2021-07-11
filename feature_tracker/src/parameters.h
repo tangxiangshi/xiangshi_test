@@ -7,7 +7,6 @@ extern int COL;
 extern int FOCAL_LENGTH;
 const int NUM_OF_CAM = 1;
 
-
 extern std::string IMAGE_TOPIC;
 extern std::string IMU_TOPIC;
 extern std::string FISHEYE_MASK;
@@ -22,5 +21,6 @@ extern int STEREO_TRACK;
 extern int EQUALIZE;
 extern int FISHEYE;
 extern bool PUB_THIS_FRAME;
+
 
 void readParameters(ros::NodeHandle &n);
