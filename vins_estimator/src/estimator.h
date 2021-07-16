@@ -33,7 +33,7 @@ class Estimator
     // interface
     void processIMU(double t, const Vector3d &linear_acceleration, const Vector3d &angular_velocity);
     void processImage(const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image, const std_msgs::Header &header);
-    void setReloFrame(double _frame_stamp, int _frame_index, vector<Vector3d> &_match_points, Vector3d _relo_t, Matrix3d _relo_r);
+//    void setReloFrame(double _frame_stamp, int _frame_index, vector<Vector3d> &_match_points, Vector3d _relo_t, Matrix3d _relo_r);
 
     // internal
     void clearState();
@@ -99,6 +99,7 @@ class Estimator
     bool first_imu;
     bool is_valid, is_key;
     bool failure_occur;
+    bool donot_sen = 0; // new donot_send
 
     vector<Vector3d> point_cloud;
     vector<Vector3d> margin_cloud;
@@ -110,11 +111,11 @@ class Estimator
     double para_SpeedBias[WINDOW_SIZE + 1][SIZE_SPEEDBIAS];
     double para_Feature[NUM_OF_F][SIZE_FEATURE];
     double para_Ex_Pose[NUM_OF_CAM][SIZE_POSE];
-    double para_Retrive_Pose[SIZE_POSE];
+//    double para_Retrive_Pose[SIZE_POSE];
     double para_Td[1][1];
     double para_Tr[1][1];
 
-    int loop_window_index;
+//    int loop_window_index;
 
     MarginalizationInfo *last_marginalization_info;
     vector<double *> last_marginalization_parameter_blocks;
@@ -122,18 +123,18 @@ class Estimator
     map<double, ImageFrame> all_image_frame;
     IntegrationBase *tmp_pre_integration;
 
-    //relocalization variable
-    bool relocalization_info;
-    double relo_frame_stamp;
-    double relo_frame_index;
-    int relo_frame_local_index;
-    vector<Vector3d> match_points;
-    double relo_Pose[SIZE_POSE];
-    Matrix3d drift_correct_r;
-    Vector3d drift_correct_t;
-    Vector3d prev_relo_t;
-    Matrix3d prev_relo_r;
-    Vector3d relo_relative_t;
-    Quaterniond relo_relative_q;
-    double relo_relative_yaw;
+//    //relocalization variable
+//    bool relocalization_info;
+//    double relo_frame_stamp;
+//    double relo_frame_index;
+//    int relo_frame_local_index;
+//    vector<Vector3d> match_points;
+//    double relo_Pose[SIZE_POSE];
+//    Matrix3d drift_correct_r;
+//    Vector3d drift_correct_t;
+//    Vector3d prev_relo_t;
+//    Matrix3d prev_relo_r;
+//    Vector3d relo_relative_t;
+//    Quaterniond relo_relative_q;
+//    double relo_relative_yaw;
 };

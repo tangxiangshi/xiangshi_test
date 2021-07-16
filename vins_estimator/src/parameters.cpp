@@ -56,16 +56,16 @@ void readParameters(ros::NodeHandle &n)
     MIN_PARALLAX = fsSettings["keyframe_parallax"];
     MIN_PARALLAX = MIN_PARALLAX / FOCAL_LENGTH;
 
-    std::string OUTPUT_PATH;
-    fsSettings["output_path"] >> OUTPUT_PATH;
-    VINS_RESULT_PATH = OUTPUT_PATH + "/vins_result_no_loop.csv";
-    std::cout << "result path " << VINS_RESULT_PATH << std::endl;
+//    std::string OUTPUT_PATH;
+//    fsSettings["output_path"] >> OUTPUT_PATH;
+//    VINS_RESULT_PATH = OUTPUT_PATH + "/vins_result_no_loop.csv";
+//    std::cout << "result path " << VINS_RESULT_PATH << std::endl;
 
-    // create folder if not exists
-    FileSystemHelper::createDirectoryIfNotExists(OUTPUT_PATH.c_str());
+//    // create folder if not exists
+//    FileSystemHelper::createDirectoryIfNotExists(OUTPUT_PATH.c_str());
 
-    std::ofstream fout(VINS_RESULT_PATH, std::ios::out);
-    fout.close();
+//    std::ofstream fout(VINS_RESULT_PATH, std::ios::out);
+//    fout.close();
 
     ACC_N = fsSettings["acc_n"];
     ACC_W = fsSettings["acc_w"];
@@ -82,7 +82,7 @@ void readParameters(ros::NodeHandle &n)
         ROS_WARN("have no prior about extrinsic param, calibrate extrinsic param");
         RIC.push_back(Eigen::Matrix3d::Identity());
         TIC.push_back(Eigen::Vector3d::Zero());
-        EX_CALIB_RESULT_PATH = OUTPUT_PATH + "/extrinsic_parameter.csv";
+//        EX_CALIB_RESULT_PATH = OUTPUT_PATH + "/extrinsic_parameter.csv";
 
     }
     else 
@@ -90,7 +90,7 @@ void readParameters(ros::NodeHandle &n)
         if ( ESTIMATE_EXTRINSIC == 1)
         {
             ROS_WARN(" Optimize extrinsic param around initial guess!");
-            EX_CALIB_RESULT_PATH = OUTPUT_PATH + "/extrinsic_parameter.csv";
+//            EX_CALIB_RESULT_PATH = OUTPUT_PATH + "/extrinsic_parameter.csv";
         }
         if (ESTIMATE_EXTRINSIC == 0)
             ROS_WARN(" fix extrinsic param ");
