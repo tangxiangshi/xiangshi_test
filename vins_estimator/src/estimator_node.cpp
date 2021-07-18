@@ -1,17 +1,18 @@
 #include "estimator_node.h"
 
 Estimator estimator;
-
+// pub vins data for lvio_estimator
 ros::Publisher pub_correct_data;
 ros::Publisher pub_vision_local_cloud; // local cloud ?
 ros::Publisher pub_img_td;
 ros::Publisher pub_gravity;
+// ros::Publisher pub_imgs;
 
 std::condition_variable con;
 double current_time = -1;
 queue<sensor_msgs::ImuConstPtr> imu_buf;
 queue<sensor_msgs::PointCloudConstPtr> feature_buf;
-queue<sensor_msgs::PointCloudConstPtr> relo_buf;
+//queue<sensor_msgs::PointCloudConstPtr> relo_buf;
 int sum_of_wait = 0;
 
 int td_count = 0; //td_count?
@@ -27,10 +28,12 @@ Eigen::Quaterniond tmp_Q;
 Eigen::Vector3d tmp_V;
 Eigen::Vector3d tmp_Ba;
 Eigen::Vector3d tmp_Bg;
+Eigen::Vector3d acc_0;
+Eigen::Vector3d gyr_0;
 bool init_feature = 0;
 bool init_imu = 1;
 double last_imu_t = 0;
-double last_td = 0;
+double last_td = 0; // last_td count?
 
 void predict(const sensor_msgs::ImuConstPtr &imu_msg)
 {
@@ -86,6 +89,78 @@ void update()
     for (sensor_msgs::ImuConstPtr tmp_imu_msg; !tmp_imu_buf.empty(); tmp_imu_buf.pop())
         predict(tmp_imu_buf.front());
 
+}
+
+void storeCorrectData(const Estimator &estimator, const std_msgs::Header &header, lvio_ros_msgs::CorrectData &correct_data)
+{
+  correct_data.header = header;
+  Quaterniond _tmp_Q;
+  _tmp_Q = Quaterniond(estimator.Rs[WINDOW_SIZE]);
+  correct_data.orientation.x = _tmp_Q.x();
+  correct_data.orientation.y = _tmp_Q.y();
+  correct_data.orientation.z = _tmp_Q.z();
+  correct_data.orientation.w = _tmp_Q.w();
+
+  correct_data.position.x = estimator.Ps[WINDOW_SIZE].x();
+  correct_data.position.y = estimator.Ps[WINDOW_SIZE].y();
+  correct_data.position.z = estimator.Ps[WINDOW_SIZE].z();
+
+  correct_data.velocity.x = estimator.Vs[WINDOW_SIZE].x();
+  correct_data.velocity.y = estimator.Vs[WINDOW_SIZE].y();
+  correct_data.velocity.z = estimator.Vs[WINDOW_SIZE].z();
+
+  correct_data.bias_acc.x = estimator.Bas[WINDOW_SIZE].x();
+  correct_data.bias_acc.y = estimator.Bas[WINDOW_SIZE].y();
+  correct_data.bias_acc.z = estimator.Bas[WINDOW_SIZE].z();
+
+  correct_data.bias_gyro.x = estimator.Bgs[WINDOW_SIZE].x();
+  correct_data.bias_gyro.y = estimator.Bgs[WINDOW_SIZE].y();
+  correct_data.bias_gyro.z = estimator.Bgs[WINDOW_SIZE].z();
+}
+
+// double last_time = 0;
+void storeFeatureCloud(const Estimator &estimator, const std_msgs::Header &header, sensor_msgs::PointCloud &feature_cloud)
+{
+  feature_cloud.header = header; //window.back.header
+  // double delta_t = point_cloud.header.stamp.toSec() - last_time;
+  // last_time = point_cloud.header.stamp.toSec();
+  // ROS_INFO("delta_t is %f", delta_t);
+  // if(delta_t > 0.06)
+  // ROS_WARN("img frame lost!!!");
+
+  sensor_msgs::ChannelFloat32 p_2d;
+  for(auto &it_per_id : estimator.f_manager.feature)
+  {
+    int used_num;
+    used_num = it_per_id.feature_per_frame.size();
+    if(used_num>=2 && it_per_id.start_frame <WINDOW_SIZE - 2 && it_per_id.solve_flag == 1)
+      continue;
+    // recover real depth at "current camera frame" ==> start frame
+    int imu_i = it_per_id.start_frame;
+    Eigen::Vector3d pts_i = it_per_id.feature_per_frame[0].point * it_per_id.estimated_depth; // 3d point take feature_per_frame[0] as pts_i;
+    Eigen::Vector3d w_pts_i = estimator.Rs[imu_i] * (estimator.ric[0] * pts_i + estimator.tic[0]) + estimator.Ps[imu_i]; // from camera frame to world frame 最老帧坐标系下的三维坐标 -> 世界坐标系下的三维坐标
+    geometry_msgs::Point32 p;
+    p.x = w_pts_i(0);
+    p.y = w_pts_i(1);
+    p.z = w_pts_i(2);
+    feature_cloud.points.push_back(p);
+    p_2d.values.push_back(it_per_id.feature_id);
+  }
+  feature_cloud.channels.push_back(p_2d);
+}
+
+void storeImageTd(const Estimator &estimator, const sensor_msgs::PointCloudConstPtr &img_msg, lvio_ros_msgs::Td &img_td)
+{
+  img_td.header = img_msg->header;
+  img_td.cur_td = estimator.td;
+}
+
+void storeGravity(const Estimator &estimator, const std_msgs::Header &header, geometry_msgs::PointStamped &gravity)
+{
+  gravity.header = header;
+  gravity.point.x = estimator.g.x();
+  gravity.point.y = estimator.g.y();
+  gravity.point.z = estimator.g.z();
 }
 
 std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>, sensor_msgs::PointCloudConstPtr>>
@@ -151,11 +226,11 @@ void imu_callback(const sensor_msgs::ImuConstPtr &imu_msg)
 
   {
       std::lock_guard<std::mutex> lg(m_state);
-      predict(imu_msg);
-      std_msgs::Header header = imu_msg->header;
-      header.frame_id = "world";
-      if (estimator.solver_flag == Estimator::SolverFlag::NON_LINEAR)
-          pubLatestOdometry(tmp_P, tmp_Q, tmp_V, header);
+//      predict(imu_msg);
+//      std_msgs::Header header = imu_msg->header;
+//      header.frame_id = "world";
+//      if (estimator.solver_flag == Estimator::SolverFlag::NON_LINEAR)
+//          pubLatestOdometry(tmp_P, tmp_Q, tmp_V, header);
   }
 }
 
@@ -195,13 +270,13 @@ void restart_callback(const std_msgs::BoolConstPtr &restart_msg)
     return;
 }
 
-void relocalization_callback(const sensor_msgs::PointCloudConstPtr &points_msg)
-{
-    //printf("relocalization callback! \n");
-    m_buf.lock();
-    relo_buf.push(points_msg);
-    m_buf.unlock();
-}
+//void relocalization_callback(const sensor_msgs::PointCloudConstPtr &points_msg)
+//{
+//    //printf("relocalization callback! \n");
+//    m_buf.lock();
+//    relo_buf.push(points_msg);
+//    m_buf.unlock();
+//}
 
 // thread: visual-inertial odometry
 void process()
@@ -261,32 +336,32 @@ void process()
                     //printf("dimu: dt:%f a: %f %f %f w: %f %f %f\n",dt_1, dx, dy, dz, rx, ry, rz);
                 }
             }
-            // set relocalization frame
-            sensor_msgs::PointCloudConstPtr relo_msg = NULL;
-            while (!relo_buf.empty())
-            {
-                relo_msg = relo_buf.front();
-                relo_buf.pop();
-            }
-            if (relo_msg != NULL)
-            {
-                vector<Vector3d> match_points;
-                double frame_stamp = relo_msg->header.stamp.toSec();
-                for (unsigned int i = 0; i < relo_msg->points.size(); i++)
-                {
-                    Vector3d u_v_id;
-                    u_v_id.x() = relo_msg->points[i].x;
-                    u_v_id.y() = relo_msg->points[i].y;
-                    u_v_id.z() = relo_msg->points[i].z;
-                    match_points.push_back(u_v_id);
-                }
-                Vector3d relo_t(relo_msg->channels[0].values[0], relo_msg->channels[0].values[1], relo_msg->channels[0].values[2]);
-                Quaterniond relo_q(relo_msg->channels[0].values[3], relo_msg->channels[0].values[4], relo_msg->channels[0].values[5], relo_msg->channels[0].values[6]);
-                Matrix3d relo_r = relo_q.toRotationMatrix();
-                int frame_index;
-                frame_index = relo_msg->channels[0].values[7];
-                estimator.setReloFrame(frame_stamp, frame_index, match_points, relo_t, relo_r);
-            }
+//            // set relocalization frame
+//            sensor_msgs::PointCloudConstPtr relo_msg = NULL;
+//            while (!relo_buf.empty())
+//            {
+//                relo_msg = relo_buf.front();
+//                relo_buf.pop();
+//            }
+//            if (relo_msg != NULL)
+//            {
+//                vector<Vector3d> match_points;
+//                double frame_stamp = relo_msg->header.stamp.toSec();
+//                for (unsigned int i = 0; i < relo_msg->points.size(); i++)
+//                {
+//                    Vector3d u_v_id;
+//                    u_v_id.x() = relo_msg->points[i].x;
+//                    u_v_id.y() = relo_msg->points[i].y;
+//                    u_v_id.z() = relo_msg->points[i].z;
+//                    match_points.push_back(u_v_id);
+//                }
+//                Vector3d relo_t(relo_msg->channels[0].values[0], relo_msg->channels[0].values[1], relo_msg->channels[0].values[2]);
+//                Quaterniond relo_q(relo_msg->channels[0].values[3], relo_msg->channels[0].values[4], relo_msg->channels[0].values[5], relo_msg->channels[0].values[6]);
+//                Matrix3d relo_r = relo_q.toRotationMatrix();
+//                int frame_index;
+//                frame_index = relo_msg->channels[0].values[7];
+//                estimator.setReloFrame(frame_stamp, frame_index, match_points, relo_t, relo_r);
+//            }
 
             ROS_DEBUG("processing vision data with stamp %f \n", img_msg->header.stamp.toSec());
 
@@ -316,23 +391,56 @@ void process()
             std_msgs::Header header = img_msg->header;
             header.frame_id = "world";
 
-            pubOdometry(estimator, header);
-            pubKeyPoses(estimator, header);
-            pubCameraPose(estimator, header);
-            pubPointCloud(estimator, header);
+//            pubOdometry(estimator, header);
+//            pubKeyPoses(estimator, header);
+//            pubCameraPose(estimator, header);
+//            pubPointCloud(estimator, header);
             pubTF(estimator, header);
-            pubKeyframe(estimator);
-            if (relo_msg != NULL)
-                pubRelocalization(estimator);
-            //ROS_ERROR("end: %f, at %f", img_msg->header.stamp.toSec(), ros::Time::now().toSec());
+//            pubKeyframe(estimator);
+//            if (relo_msg != NULL)
+//                pubRelocalization(estimator);
+//            //ROS_ERROR("end: %f, at %f", img_msg->header.stamp.toSec(), ros::Time::now().toSec());
+
+            // Check td stability to decide whether publish VINS data
+            if(estimator.solver_flag == Estimator::SolverFlag::NON_LINEAR)
+            {
+              double td_error = estimator.td - last_td;
+              if(fabs(td_error) <= estimator.td - last_td)
+                td_count++;
+              else
+                td_count = 0;
+              last_td = estimator.td;
+            }
+
+            if(!estimator.donot_send && td_count > ENOUGH_COUNT)
+            {
+              // Only publish the solved state at 20Hz
+              lvio_ros_msgs::CorrectData correct_data;
+              sensor_msgs::PointCloud feature_cloud;
+              lvio_ros_msgs::Td img_td;
+              geometry_msgs::PointStamped gravity;
+              storeCorrectData(estimator, header, correct_data);
+              storeFeatureCloud(estimator, header, feature_cloud);
+              storeImageTd(estimator, img_msg, img_td);
+              storeGravity(estimator,header,gravity);
+              pub_correct_data.publish(correct_data);
+              pub_vision_local_cloud.publish(feature_cloud);
+              pub_img_td.publish(img_td);
+              pub_gravity.publish(gravity);
+              // ROS_DEBUG("VINS: %fms", t_vins.toc());
+            }
+            else {
+              ROS_INFO("Need to wait!!!");
+              estimator.donot_send = 0; // Maybe send msg at next time
+            }
         }
         m_estimator.unlock();
-        m_buf.lock();
-        m_state.lock();
-        if (estimator.solver_flag == Estimator::SolverFlag::NON_LINEAR)
-            update();
-        m_state.unlock();
-        m_buf.unlock();
+//        m_buf.lock();
+//        m_state.lock();
+//        if (estimator.solver_flag == Estimator::SolverFlag::NON_LINEAR)
+//            update();
+//        m_state.unlock();
+//        m_buf.unlock();
     }
 }
 
@@ -342,24 +450,27 @@ int main(int argc, char **argv)
     ros::NodeHandle n("~");
     ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Warn);
     readParameters(n);
-//    estimator.setParameter();
+    estimator.setParameter();
 //#ifdef EIGEN_DONT_PARALLELIZE
 //    ROS_DEBUG("EIGEN_DONT_PARALLELIZE");
 //#endif
-//    ROS_WARN("waiting for image and imu...");
+    ROS_WARN("waiting for image and imu...");
 
-//    registerPub(n);
+    registerPub(n);
 
-//    ros::Subscriber sub_imu = n.subscribe(IMU_TOPIC, 2000, imu_callback, ros::TransportHints().tcpNoDelay());
-//    ros::Subscriber sub_image = n.subscribe("/feature_tracker/feature", 2000, feature_callback);
+    ros::Subscriber sub_imu = n.subscribe(IMU_TOPIC, 2000, imu_callback, ros::TransportHints().tcpNoDelay());
+    ros::Subscriber sub_image = n.subscribe("/feature_tracker/feature", 2000, feature_callback);
 //    ros::Subscriber sub_restart = n.subscribe("/feature_tracker/restart", 2000, restart_callback);
 //    ros::Subscriber sub_relo_points = n.subscribe("/pose_graph/match_points", 2000, relocalization_callback);
 
-//    std::thread measurement_process{process};
+    // publish vins data for lvio_estimator
+    pub_correct_data =n.advertise<lvio_ros_msgs::CorrectData>("correct_data", 100);
+    pub_vision_local_cloud = n.advertise<sensor_msgs::PointCloud>("vision_local_cloud", 100);
+    pub_img_td = n.advertise<lvio_ros_msgs::Td>("td", 100);
+    pub_gravity = n.advertise<geometry_msgs::PoseStamped>("gravity", 100);
+    // pub_imgs = n.adevertise<lvio_ros_msgs::PointCloud3>("feature", 100);
 
-    ros::Subscriber sub_imu = n.subscribe(IMU_TOPIC,2000,imu_callback,ros::TransportHints().tcpNoDelay());
-    ros::Subscriber sub_image = n.subscribe("/feature_tracker/feature", 2000, feature_callback);
-
+    std::thread measurement_process{process};
     ROS_WARN("waiting for image and imu...");
 
     ros::spin();
