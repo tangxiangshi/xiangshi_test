@@ -55,7 +55,7 @@
 
 #include "common.h"
 #include "../utility/tic_toc.h"
-#include "../src/factor/common_factor/lidarFactor.hpp"
+#include "factor/common_factor/lidarFactor.hpp"
 
 #define DISTORTION 0
 

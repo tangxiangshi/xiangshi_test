@@ -14,7 +14,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <lvio_ros_msgs/CorrectData.h>
 #include <lvio_ros_msgs/PointCloud3.h>
-#include "../src/aloam/common_modify.h"
+#include "aloam/common_modify.h"
 
 using namespace std;
 using namespace Eigen;

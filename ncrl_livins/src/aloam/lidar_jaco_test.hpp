@@ -5,8 +5,8 @@
 #include <pcl/point_types.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include "../utility/utility.h"
-#include "../utility/point_utility.h"
+#include "utility/utility.h"
+#include "utility/point_utility.h"
 
 class LidarEdgeIJFactor : public ceres::SizedCostFunction<3, 7, 7, 7>
 {

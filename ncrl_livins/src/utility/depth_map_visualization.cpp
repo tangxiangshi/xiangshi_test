@@ -1,5 +1,4 @@
 #include "depth_map_visualization.h"
-#include "point_utility.h"
 
 #define TRANSFORM_TO_WORLD
 
@@ -10,7 +9,6 @@ ros::Publisher pub_livins_odometry, pub_vins_odometry;
 ros::Publisher pub_path, pub_vins_path;
 
 nav_msgs::Path path, vins_path;
-
 
 PtCloud vins_pts_corrected(new pcl::PointCloud<PointType>());
 PtCloud vins_pts_guess(new pcl::PointCloud<PointType>());

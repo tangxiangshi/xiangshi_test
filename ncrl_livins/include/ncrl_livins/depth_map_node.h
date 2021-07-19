@@ -27,8 +27,8 @@
 #include <message_filters/sync_policies/approximate_time.h>
 #include "ncrl_livins/depth_map_parameters.h"
 #include "ncrl_livins/depth_map_estimator.h"
-#include "../src/utility/depth_map_visualization.h"
-#include "../src/utility/ncrl_tf.h"
+#include "utility/depth_map_visualization.h"
+#include "utility/ncrl_tf.h"
 #include "lvio_ros_msgs/CorrectData.h"
 #include "lvio_ros_msgs/Td.h"
 

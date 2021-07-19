@@ -63,7 +63,7 @@
 #include "factor/common_factor/lidarFactor.hpp"
 #else
 #include "lidar_jaco_test.hpp"
-#include "../src/factor/common_factor/pose_local_parameterization.h"
+#include "factor/common_factor/pose_local_parameterization.h"
 #endif //ALOAM
 
 int frameCount = 0;

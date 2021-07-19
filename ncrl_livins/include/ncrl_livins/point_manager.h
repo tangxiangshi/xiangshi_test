@@ -15,8 +15,8 @@
 #include <lvio_ros_msgs/PointCloud3.h>
 #include <lvio_ros_msgs/CorrectData.h>
 #include "ncrl_livins/depth_map_parameters.h"
-#include "../src/utility/point_utility.h"
-#include "../src/utility/ncrl_tf.h"
+#include "utility/point_utility.h"
+#include "utility/ncrl_tf.h"
 
 using namespace Eigen;
 using namespace std;

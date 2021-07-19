@@ -2,14 +2,14 @@
 
 #include <ceres/ceres.h>
 #include "ncrl_livins/point_manager.h"
-#include "../src/factor/common_factor/imu_factor.h"
-#include "../src/factor/common_factor/pose_local_parameterization.h"
-#include "../src/factor/common_factor/projection_factor_modify.h"
-#include "../src/factor/common_factor/lidar_jaco_modify.hpp"
-#include "../src/factor/depthmap_factor.h"
-#include "../src/factor/pnp_factor.h"
-#include "../src/factor/depthmap_td_factor.h"
-#include "../src/factor/pnp_td_factor.h"
+#include "factor/common_factor/imu_factor.h"
+#include "factor/common_factor/pose_local_parameterization.h"
+#include "factor/common_factor/projection_factor_modify.h"
+#include "factor/common_factor/lidar_jaco_modify.hpp"
+#include "factor/depthmap_factor.h"
+#include "factor/pnp_factor.h"
+#include "factor/depthmap_td_factor.h"
+#include "factor/pnp_td_factor.h"
 
 class DepthMapEstimator
 {

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cmath>
-#include <eigen3/Eigen/Dense>
 
 #include <pcl/point_types.h>
 
