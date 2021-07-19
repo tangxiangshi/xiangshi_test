@@ -81,12 +81,14 @@ void loam_handler(const sensor_msgs::PointCloud2ConstPtr &edge,
     }
 }
 
+
 void vins_handler(const lvio_ros_msgs::CorrectDataConstPtr &state,
-                  const sensor_msgs::PointCloudConstPtr &img,
-                  const sensor_msgs::PointCloudConstPtr &cloud,
                   const lvio_ros_msgs::TdConstPtr &td,
                   const nav_msgs::OdometryConstPtr &ric,
-                  const geometry_msgs::PointStampedConstPtr &g)
+                  const geometry_msgs::PointStampedConstPtr &g,
+                  const sensor_msgs::PointCloudConstPtr &cloud,
+                  const sensor_msgs::PointCloudConstPtr &img
+                  )
 {
 #ifdef COMMAND_MODE
     if (start_process)
@@ -451,50 +453,83 @@ int main(int argc, char **argv)
         CLOUD_TOPIC = "/lvi_sam/vins/odometry/vision_local_cloud";
         FEATURE_TOPIC = "/lvi_sam/vins/feature/feature";
     }
-    message_filters::Subscriber<lvio_ros_msgs::CorrectData> sub_correct_data(n, CORRECT_TOPIC, 100);
-    message_filters::Subscriber<lvio_ros_msgs::Td> sub_td(n, TD_TOPIC, 100);
-    message_filters::Subscriber<nav_msgs::Odometry> sub_ric(n, EXTRINSIC_TOPIC, 100);
-    message_filters::Subscriber<geometry_msgs::PointStamped> sub_gravity(n, GRAVITY_TOPIC, 100);
-    message_filters::Subscriber<sensor_msgs::PointCloud> sub_vision_local_cloud(n, CLOUD_TOPIC, 100);
-    message_filters::Subscriber<sensor_msgs::PointCloud> sub_imgs(n, FEATURE_TOPIC, 100);
+//    message_filters::Subscriber<lvio_ros_msgs::CorrectData> sub_correct_data(n, CORRECT_TOPIC, 100);
+//    message_filters::Subscriber<lvio_ros_msgs::Td> sub_td(n, TD_TOPIC, 100);
+//    message_filters::Subscriber<nav_msgs::Odometry> sub_ric(n, EXTRINSIC_TOPIC, 100);
+//    message_filters::Subscriber<geometry_msgs::PointStamped> sub_gravity(n, GRAVITY_TOPIC, 100);
+//    message_filters::Subscriber<sensor_msgs::PointCloud> sub_vision_local_cloud(n, CLOUD_TOPIC, 100);
+//    message_filters::Subscriber<sensor_msgs::PointCloud> sub_imgs(n, FEATURE_TOPIC, 100);
 
-    typedef sync_policies::ApproximateTime<lvio_ros_msgs::CorrectData,
-                                           sensor_msgs::PointCloud,
-                                           sensor_msgs::PointCloud,
-                                           lvio_ros_msgs::Td,
-                                           nav_msgs::Odometry,
-                                           geometry_msgs::PointStamped>
-        VinsPolicy;
-    Synchronizer<VinsPolicy> sync_vins(VinsPolicy(1000),
-                                       sub_correct_data,
-                                       sub_imgs,
-                                       sub_vision_local_cloud,
-                                       sub_td,
-                                       sub_ric,
-                                       sub_gravity);
-    sync_vins.registerCallback(boost::bind(&vins_handler, _1, _2, _3, _4, _5, _6));
+      message_filters::Subscriber<lvio_ros_msgs::CorrectData> sub_correct_data(n, CORRECT_TOPIC, 100);
+      message_filters::Subscriber<lvio_ros_msgs::Td> sub_td(n, TD_TOPIC, 100);
+      message_filters::Subscriber<nav_msgs::Odometry> sub_ric(n, EXTRINSIC_TOPIC, 100);
+      message_filters::Subscriber<geometry_msgs::PointStamped> sub_gravity(n, GRAVITY_TOPIC, 100);
+      message_filters::Subscriber<sensor_msgs::PointCloud> sub_vision_local_cloud(n, CLOUD_TOPIC, 100);
+      message_filters::Subscriber<sensor_msgs::PointCloud> sub_imgs(n, FEATURE_TOPIC, 100);
 
-    // Subscribe each Lidar point cloud
-    message_filters::Subscriber<sensor_msgs::PointCloud2> sub_LaserCloudEdgeLast(n, "/laserOdometry/laser_cloud_corner_last", 100);
-    message_filters::Subscriber<sensor_msgs::PointCloud2> sub_LaserCloudFlatLast(n, "/laserOdometry/laser_cloud_surf_last", 100);
-    message_filters::Subscriber<nav_msgs::Odometry> sub_LaserOdometry(n, "/laserOdometry/laser_odom_to_init", 100);
-    message_filters::Subscriber<sensor_msgs::PointCloud2> sub_LaserCloudFullRes(n, "/laserOdometry/velodyne_cloud_3", 100);
+      typedef message_filters::sync_policies::ApproximateTime<
+          lvio_ros_msgs::CorrectData,
+          lvio_ros_msgs::Td,
+          nav_msgs::Odometry,
+          geometry_msgs::PointStamped,
+          sensor_msgs::PointCloud,
+          sensor_msgs::PointCloud> VinsPolicy;
+      // ExactTime takes a queue size as its constructor argument, hence VinsPolicy(1000)
+      message_filters::Synchronizer<VinsPolicy> sync_vins(VinsPolicy(1000),
+                                                          sub_correct_data,
+                                                          sub_td,
+                                                          sub_ric,
+                                                          sub_gravity,
+                                                          sub_vision_local_cloud,
+                                                          sub_imgs);
+
+      sync_vins.registerCallback(boost::bind(&vins_handler, _1, _2, _3, _4, _5, _6));
+
+      // Subscribe each Lidar point cloud
+      message_filters::Subscriber<sensor_msgs::PointCloud2> sub_LaserCloudEdgeLast(n, "/laserOdometry/laser_cloud_corner_last", 100);
+      message_filters::Subscriber<sensor_msgs::PointCloud2> sub_LaserCloudFlatLast(n, "/laserOdometry/laser_cloud_surf_last", 100);
+      message_filters::Subscriber<nav_msgs::Odometry> sub_LaserOdometry(n, "/laserOdometry/laser_odom_to_init", 100);
+      message_filters::Subscriber<sensor_msgs::PointCloud2> sub_LaserCloudFullRes(n, "/laserOdometry/velodyne_cloud_3", 100);
+
+//    message_filters::Subscriber<sensor_msgs::PointCloud2> sub_LaserCloudEdgeLast(n, "/laserOdometry/laser_cloud_corner_last", 100);
+//    message_filters::Subscriber<sensor_msgs::PointCloud2> sub_LaserCloudFlatLast(n, "/laserOdometry/laser_cloud_surf_last", 100);
+//    message_filters::Subscriber<nav_msgs::Odometry> sub_LaserOdometry(n, "/laserOdometry/laser_odom_to_init", 100);
+//    message_filters::Subscriber<sensor_msgs::PointCloud2> sub_LaserCloudFullRes(n, "/laserOdometry/velodyne_cloud_3", 100);
+
 
     // Message filter from ALOAM
-    typedef sync_policies::ApproximateTime<sensor_msgs::PointCloud2,
-                                           sensor_msgs::PointCloud2,
-                                           nav_msgs::Odometry,
-                                           sensor_msgs::PointCloud2>
-        LoamPolicy;
-    Synchronizer<LoamPolicy> sync_loam(LoamPolicy(1000),
-                                       sub_LaserCloudEdgeLast,
-                                       sub_LaserCloudFlatLast,
-                                       sub_LaserOdometry,
-                                       sub_LaserCloudFullRes);
-    sync_loam.registerCallback(boost::bind(&loam_handler, _1, _2, _3, _4));
+      typedef message_filters::sync_policies::ApproximateTime<
+          sensor_msgs::PointCloud2,
+          sensor_msgs::PointCloud2,
+          nav_msgs::Odometry,
+          sensor_msgs::PointCloud2> LoamPolicy;
 
+//    typedef sync_policies::ApproximateTime<sensor_msgs::PointCloud2,
+//                                           sensor_msgs::PointCloud2,
+//                                           nav_msgs::Odometry,
+//                                           sensor_msgs::PointCloud2>
+//        LoamPolicy;
+
+
+//    Synchronizer<LoamPolicy> sync_loam(LoamPolicy(1000),
+//                                       sub_LaserCloudEdgeLast,
+//                                       sub_LaserCloudFlatLast,
+//                                       sub_LaserOdometry,
+//                                       sub_LaserCloudFullRes);
+
+    message_filters::Synchronizer<LoamPolicy> sync_loam(LoamPolicy(1000),
+                                                        sub_LaserCloudEdgeLast,
+                                                        sub_LaserCloudFlatLast,
+                                                        sub_LaserOdometry,
+                                                        sub_LaserCloudFullRes);
+    sync_loam.registerCallback(boost::bind(&loam_handler, _1, _2, _3, _3));
+
+//    sync_loam.registerCallback(boost::bind(&loam_handler, _1, _2, _3, _4));
     std::thread depth_map_thread;
     depth_map_thread = std::thread(depth_map_process);
+
+//    std::thread depth_map_thread;
+//    depth_map_thread = std::thread(depth_map_process);
 
 #ifdef COMMAND_MODE
     std::thread command_thread;
