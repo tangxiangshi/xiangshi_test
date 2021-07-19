@@ -1,0 +1,56 @@
+<launch>
+	<!--Program setting-->
+	<arg name="VINS_FRONT_USE" default="true" />
+	<arg name="aloam_modify" default="true" />
+	<arg name="bag_lvi_sam" default="true" />
+	<arg name="rviz" default="true" />
+	<arg name="GT" default="false" />
+	<!--Path setting-->
+	<arg name="vins_path" default="$(find feature_tracker)/../config/../" />
+	<arg name="config_path" default="$(find feature_tracker)/../config/depth_map/cam_param/lvi_sam_cam.yaml" />
+	<!--arg name="config_path" default="$(find feature_tracker)/../config/depth_map/cam_param/mvsec_cam.yaml" /-->
+	<!-- arg name="config_path" default="$(find feature_tracker)/../config/depth_map/cam_param/mocap_flight.yaml"/ -->
+	<arg name="config_path_2" default="$(find feature_tracker)/../config/depth_map/lidar_param/lvi_sam_lidar.yaml" />
+	<!--arg name="config_path_2" default="$(find feature_tracker)/../config/depth_map/lidar_param/mvsec_lidar.yaml" /-->
+	<!-- arg name="config_path_2" default="$(find feature_tracker)/../config/depth_map/lidar_param/move_it_lvi.yaml" / -->
+
+	<!-- node 1 & 2 feature extraction and frame to frame odometry estimate -->
+	<group if="$(arg aloam_modify)">
+		<remap from="/velodyne_points" to="/points_raw"/>
+		<param name="minimum_range" type="double" value="0.5" />
+		<param name="scan_line" type="int" value="16" />
+		<param name="mapping_skip_frame" type="int" value="1" />
+		<node pkg="ncrl_livins" type="scanRegistration" name="scanRegistration" launch-prefix="taskset -c 3" />
+		<node pkg="ncrl_livins" type="laserOdometry" name="laserOdometry" launch-prefix="taskset -c 3" />
+	</group>
+	<!-- node 3 feature tracker -->
+	<group if="$(arg VINS_FRONT_USE)">
+		<node name="feature_tracker" pkg="feature_tracker" type="feature_tracker" output="log" launch-prefix="taskset -c 1">
+			<param name="config_file" type="string" value="$(arg config_path)" />
+			<param name="vins_folder" type="string" value="$(arg vins_path)" />
+		</node>
+		<!-- node 4 is second layer to estimate in high frequecy -->
+		<node pkg="vins_estimator" type="vins_estimator" name="vins_estimator" output="screen" launch-prefix="taskset -c 2">
+			<param name="config_file" type="string" value="$(arg config_path)" />
+			<param name="vins_folder" type="string" value="$(arg vins_path)" />
+		</node>
+	</group>
+	<!-- node 5 is LiVINS estimator -->
+	<node pkg="ncrl_livins" type="depth_map" name="depth_map" output="screen" launch-prefix="taskset -c 4">
+		<param name="config_file" type="string" value="$(arg config_path_2)" />
+		<param name="vins_front_use" type="bool" value="$(arg VINS_FRONT_USE)" />
+	</node>
+	<!-- Visualization -->
+	<group if="$(arg rviz)">
+		<param name="use_sim_time" value="true" />
+		<node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find feature_tracker)/../config/rviz_cfg/depth_map.rviz" />
+	</group>
+	<!-- ground truth -->
+	<group if="$(arg GT)">
+		<node pkg="ncrl_livins" type="ground_truth" name="ground_truth" />
+	</group>
+	<group if="$(arg bag_lvi_sam)">
+	<!-- Image conversion -->
+    <node pkg="image_transport" type="republish" name="republish" args="compressed in:=/camera/image_raw raw out:=/camera/image_raw" output="screen" respawn="true"/>
+	</group>
+</launch>
